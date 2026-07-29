@@ -5,12 +5,12 @@ function Select({ options, label, className, ...props }, ref) {
   
   return (
     <div className='w-full'>
-      {label && <label htmlFor={id} className=''>{label}</label>}
+      {label && <label htmlFor={id} className='mb-2 block text-sm font-medium text-muted-foreground'>{label}</label>}
       <select
         {...props}
         id={id}
         ref={ref}
-        className={`px-3 py-2 rounded-lg bg-white text-black outline-none focus:bg-blue-200 w-full ${className}`}
+        className={`h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/40 ${className}`}
       >
         {options?.map((option) => (
           <option key={option} value={option}>

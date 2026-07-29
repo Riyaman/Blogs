@@ -12,6 +12,7 @@ import SignUp from "./SignUp";
 import Select from "./ui/Select";
 import PostForm from "./post-form/PostForm";
 import RTE from "./RTE";
+import EmptyState from "./EmptyState";
 export {
     Header,
      Footer,
@@ -26,5 +27,6 @@ export {
      Button,
      RTE,
      PostForm,
-     AuthLayout
+     AuthLayout,
+     EmptyState
 }

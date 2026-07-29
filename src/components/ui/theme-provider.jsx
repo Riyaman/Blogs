@@ -8,25 +8,45 @@ const initialState = {
 const ThemeProviderContext = createContext(initialState);
 
 export function ThemeProvider({ children, defaultTheme = "system", storageKey = "vite-ui-theme", ...props }) {
-  const [theme, setThemeState] = useState(() => localStorage.getItem(storageKey) || defaultTheme);
+  const [theme, setThemeState] = useState(() => {
+    if (typeof window === "undefined") return defaultTheme;
+    return window.localStorage.getItem(storageKey) || defaultTheme;
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const resolvedTheme = theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : theme;
+
     root.classList.remove("light", "dark");
+    root.classList.add(resolvedTheme);
+    root.style.colorScheme = resolvedTheme;
+  }, [theme]);
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      root.classList.add(systemTheme);
-      return;
-    }
+  useEffect(() => {
+    if (theme !== "system") return undefined;
 
-    root.classList.add(theme);
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      const root = window.document.documentElement;
+      const resolvedTheme = mediaQuery.matches ? "dark" : "light";
+      root.classList.remove("light", "dark");
+      root.classList.add(resolvedTheme);
+      root.style.colorScheme = resolvedTheme;
+    };
+
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
   const value = {
     theme,
     setTheme: (newTheme) => {
-      localStorage.setItem(storageKey, newTheme);
+      window.localStorage.setItem(storageKey, newTheme);
       setThemeState(newTheme);
     },
   };

@@ -1,27 +1,64 @@
-import React from 'react'
-import {Editor } from '@tinymce/tinymce-react';
-import {Controller } from 'react-hook-form';
+import { Editor } from "@tinymce/tinymce-react";
+import { Controller } from "react-hook-form";
+import { useTheme } from "./ui/theme-provider";
 
+export default function RTE({
+  name = "content",
+  control,
+  label,
+  defaultValue = "",
+}) {
+  const { theme } = useTheme();
 
-export default function RTE({name, control, label, defaultValue =""}) {
+  const currentTheme =
+    theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : theme;
+
   return (
-    <div className='w-full'> 
-    {label && <label className='inline-block mb-1 pl-1 text-black  bg-white dark:bg-gray-700 dark:text-white'>{label}</label>}
+    <div className="w-full">
+      {label && (
+        <label className="mb-2 block text-sm font-medium text-foreground">
+          {label}
+        </label>
+      )}
 
-    <Controller 
-    name={name || "content"}
-    control={control}
-    render={({field: {onChange}}) => (
-        <Editor
-         apiKey='4bnbh59hzpk7co7wla700fn69ssg50h3qrr433pd54y2lcuf'
-        initialValue={defaultValue}
-        
-        init={{
-            initialValue: defaultValue,
-            height: 500,
-            menubar: true,
-            plugins: [
-                "image",
+      <Controller
+        name={name}
+        control={control}
+        defaultValue={defaultValue}
+        rules={{
+          required: "Content is required",
+        }}
+        render={({ field: { value, onChange } }) => (
+          <Editor
+            key={currentTheme}
+            apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
+            value={value || ""}
+            onEditorChange={(content) => onChange(content)}
+            init={{
+              height: 500,
+
+              menubar: true,
+              branding: false,
+              promotion: false,
+
+              resize: true,
+              statusbar: true,
+
+              skin:
+                currentTheme === "dark"
+                  ? "oxide-dark"
+                  : "oxide",
+
+              content_css:
+                currentTheme === "dark"
+                  ? "dark"
+                  : "default",
+
+              plugins: [
                 "advlist",
                 "autolink",
                 "lists",
@@ -37,21 +74,38 @@ export default function RTE({name, control, label, defaultValue =""}) {
                 "insertdatetime",
                 "media",
                 "table",
-                "code",
                 "help",
                 "wordcount",
-                "anchor",
-            ],
-            toolbar:
-            "undo redo | blocks | image | bold italic forecolor | alignleft aligncenter bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent |removeformat | help",
-            content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }"
-        }}
-        onEditorChange={onChange}
-        />
-    )}
-    />
+              ],
 
-     </div>
-  )
+              toolbar:
+                "undo redo | " +
+                "blocks | " +
+                "bold italic underline forecolor | " +
+                "alignleft aligncenter alignright | " +
+                "bullist numlist | " +
+                "link image media table | " +
+                "removeformat code fullscreen",
+
+              toolbar_mode: "sliding",
+
+              content_style: `
+                body {
+                  font-family: Inter, Arial, sans-serif;
+                  font-size: 16px;
+                  line-height: 1.8;
+                  padding: 16px;
+                }
+
+                img {
+                  max-width: 100%;
+                  height: auto;
+                }
+              `,
+            }}
+          />
+        )}
+      />
+    </div>
+  );
 }
-

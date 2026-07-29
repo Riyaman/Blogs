@@ -1,86 +1,13 @@
-import React, { useState } from 'react'
-import authService from '../appwrite/auth'
-import { Link, useNavigate } from 'react-router-dom'
-import { login } from '../store/authSlice'
-import { Button, Input, Logo } from './index'
-import { useDispatch } from 'react-redux'
-import { useForm } from 'react-hook-form'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useForm } from "react-hook-form";
+import authService from "../appwrite/auth";
+import { login as setSession } from "../store/authSlice";
+import { Button, Input, Logo } from "./index";
 
-function SignUp() {
-  const navigate = useNavigate()
-  const [error, setError] = useState("")
-  const dispatch = useDispatch()
-  const { register, handleSubmit } = useForm()
-
-  const create = async (data) => {
-    setError("")
-    try {
-      const userData = await authService.createAccount(data)
-      if (userData) {
-        const userData = await authService.getCurrentUser()
-        if (userData) dispatch(login(userData))
-        navigate("/")
-      }
-    } catch (error) {
-      setError(error.message)
-    }
-  }
-  return (
-    <div className='flex items-center justify-center'>
-      <div className={`bg-blue-500 rounded-xl p-10 border border-black/10`}>
-        <div className='mb-2 flex justify-center'>
-          <span className='inline-block w-full max-w-[100px]'>
-            <Logo width='100%' />
-          </span>
-        </div>
-        <h2 className='mt-2 text-center text-2xl font-bold leading-tight'>Sign up to create accout</h2>
-        <p className='mt-2 text-center text-base text-black/60'>Already have an account?&nbsp;
-          <Link
-            to="/login"
-            className='font-medium text-primary transition-all duration-200 hover:underline'
-          >
-            Log In
-          </Link>
-        </p>
-        {error && <p className='text-red-600 mt-8 text-center'>{error}</p>}
-
-        <form onSubmit={handleSubmit(create)}>
-          <div className='space-y-5'>
-            <Input
-              label="Full Name: "
-              placeholder="Enter your full name"
-              {...register("name", { required: true, })}
-            />
-            <Input
-              label="Email: "
-              placeholder="Enter your email"
-              type="Email"
-              {...register("email", {
-                required: true,
-                validate: {
-                  matchPatern: (value) =>
-                    /^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}$/.test(value) ||
-                    "Email address must be valid",
-                },
-              })}
-            />
-            <Input
-              label="Password: "
-              type="password"
-              placeholder="Enter your password"
-              {...register("password", {
-                required: true,
-              })}
-            />
-            <Button
-              type='submit'
-              className='w-full bg-black dark:bg-white'
-            >Create Account</Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
+export default function SignUp() {
+    const navigate = useNavigate(); const dispatch = useDispatch(); const [serverError, setServerError] = useState(""); const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+    const submit = async (values) => { setServerError(""); try { await authService.createAccount(values); const userData = await authService.getCurrentUser(); if (!userData) throw new Error("Your account was created, but your session could not be started."); dispatch(setSession({ userData })); navigate("/"); } catch (error) { setServerError(error.message); } };
+    return <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-xl shadow-slate-200/60 dark:shadow-slate-950/40 sm:p-9"><div className="mb-8"><Logo /><h1 className="mt-7 text-2xl font-bold tracking-tight text-foreground">Start publishing</h1><p className="mt-2 text-sm text-muted-foreground">Create a quiet home for your best work.</p></div>{serverError && <p role="alert" className="mb-5 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{serverError}</p>}<form onSubmit={handleSubmit(submit)} className="space-y-5"><Input label="Name" autoComplete="name" placeholder="Your name" error={errors.name?.message} {...register("name", { required: "Enter your name", minLength: { value: 2, message: "Use at least 2 characters" } })} /><Input label="Email address" type="email" autoComplete="email" placeholder="you@example.com" error={errors.email?.message} {...register("email", { required: "Enter your email address", pattern: { value: /^\S+@\S+\.\S+$/, message: "Enter a valid email address" } })} /><Input label="Password" type="password" autoComplete="new-password" placeholder="At least 8 characters" error={errors.password?.message} {...register("password", { required: "Create a password", minLength: { value: 8, message: "Use at least 8 characters" } })} /><Button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 text-white hover:bg-indigo-700">{isSubmitting ? "Creating account…" : "Create account"}</Button></form><p className="mt-7 text-center text-sm text-muted-foreground">Already have an account? <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">Sign in</Link></p></div>;
 }
-
-export default SignUp;

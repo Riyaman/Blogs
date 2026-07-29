@@ -1,50 +1,11 @@
-import React, {useEffect, useState} from 'react'
+import { ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import appwriteService from "../appwrite/config";
-import {Container, PostCard} from '../components'
-// import Dashbord from './Dashbord';
-function Home() {
-   
-    const [posts, setPosts] = useState([])
+import { Container, EmptyState, PostCard } from "../components";
 
-    useEffect(() => {
-        appwriteService.getPosts().then((posts) => {
-            if (posts) {
-                setPosts(posts.documents)
-            }
-        })
-    }, [])
-  
-    if (posts.length === 0) {
-        return (
-            <div className="w-full py-8 mt-4 text-center">
-                <Container>
-                    <div className="flex flex-wrap">
-                        <div className="p-2 w-full">
-                            <h1 className="text-2xl font-bold hover:text-gray-500">
-                                Login to read posts
-                            </h1>
-                        </div>
-                    </div>
-                </Container>
-            </div>
-        )
-    }
-    return (
-        <>
-        <div className='w-full py-8'>
-            {/* <Dashbord/> */}
-            <Container>
-                <div className='flex flex-wrap'>
-                    {posts?.map((post) => (
-                        <div key={post.$id} className='p-2 w-1/4'>
-                            <PostCard post={post} />
-                        </div>
-                    ))}
-                </div>
-            </Container>
-        </div>
-    </>
-    )
+export default function Home() {
+    const [state, setState] = useState({ posts: [], loading: true, error: "" });
+    useEffect(() => { let active = true; appwriteService.getPosts().then((result) => active && setState({ posts: result.documents, loading: false, error: "" })).catch((error) => active && setState({ posts: [], loading: false, error: error.message })); return () => { active = false; }; }, []);
+    return <><section className="overflow-hidden border-b border-border bg-background"><Container className="relative py-16 sm:py-24"><div className="absolute -right-24 -top-28 size-80 rounded-full bg-indigo-100 blur-3xl dark:bg-indigo-950/70" /><div className="relative max-w-3xl"><p className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300"><Sparkles size={14} />A calmer place to publish</p><h1 className="mt-6 text-4xl font-bold tracking-tight text-foreground sm:text-6xl">Ideas deserve a<br /><span className="text-indigo-600">beautiful home.</span></h1><p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">Inkwell is an intentionally simple workspace for writing, publishing, and returning to work you are proud of.</p><Link to="/add-post" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 dark:shadow-indigo-950/50">Start writing <ArrowRight size={17} /></Link></div></Container></section><section className="py-12 sm:py-16"><Container><div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-indigo-600">Latest from Inkwell</p><h2 className="mt-1 text-2xl font-bold tracking-tight text-foreground">Freshly published</h2></div><Link to="/all-posts" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View library →</Link></div>{state.loading ? <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map((item) => <div key={item} className="h-80 animate-pulse rounded-2xl bg-muted" />)}</div> : state.error ? <EmptyState title="Stories could not be loaded" description={state.error} /> : state.posts.length ? <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">{state.posts.slice(0, 6).map((post) => <PostCard key={post.$id} post={post} />)}</div> : <EmptyState action />}</Container></section></>;
 }
-
-export default Home

@@ -1,85 +1,13 @@
-import React, {useState} from 'react'
-import {Link, useNavigate} from 'react-router-dom'
-import { login as authLogin } from '../store/authSlice'
-import {Button, Input, Logo} from "./index"
-import {useDispatch} from "react-redux"
-import authService from "../appwrite/auth"
-import {useForm} from "react-hook-form"
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useForm } from "react-hook-form";
+import authService from "../appwrite/auth";
+import { login as setSession } from "../store/authSlice";
+import { Button, Input, Logo } from "./index";
 
-function Login() {
-    const navigate = useNavigate()
-    const dispatch = useDispatch()
-    const {register, handleSubmit} = useForm()
-    const [error, setError] = useState("")
-
-    const login = async(data) => {
-        setError("")
-        try {
-            const session = await authService.login(data)
-            if (session) {
-                const userData = await authService.getCurrentUser()
-                if(userData) dispatch(authLogin(userData));
-                navigate("/")
-            }
-        } catch (error) {
-            setError(error.message)
-        }
-    }
-
-  return (
-    <div
-    className='flex items-center justify-center '
-    >
-        <div className={`mx-auto max-w-lg bg-blue-500 rounded-xl p-10 border border-black/10`}>
-        <div className="mb-2 flex justify-center">
-                    <span className="inline-block w-full max-w-[100px]">
-                        <Logo width="100%" />
-                    </span>
-        </div>
-        <h2 className="text-center text-2xl font-bold leading-tight">Login to your account</h2>
-        <p className="mt-2 text-center text-base text-black/60">
-                    Don&apos;t have any account?&nbsp;
-                    <Link
-                        to="/signup"
-                        className="font-medium text-primary transition-all duration-200 hover:underline"
-                    >
-                        Sign Up
-                    </Link>
-        </p>
-        {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
-        <form onSubmit={handleSubmit(login)} className='mt-8'>
-            <div className='space-y-5'>
-                <Input
-                label="Email: "
-                placeholder="Enter your email"
-                type="email"
-               
-                {...register("email", {
-                    required: true,
-                    validate: {
-                        matchPatern: (value) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                        "Email address must be a valid address",
-                    }
-                })}
-                />
-                <Input
-                label="Password: "
-                type="password"
-                placeholder="Enter your password"
-                
-                {...register("password", {
-                    required: true,
-                })}
-                />
-                <Button
-                type="submit"
-                className="w-full"
-                >Login</Button>
-            </div>
-        </form>
-        </div>
-    </div>
-  )
+export default function Login() {
+    const navigate = useNavigate(); const dispatch = useDispatch(); const [serverError, setServerError] = useState(""); const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+    const submit = async (credentials) => { setServerError(""); try { await authService.login(credentials); const userData = await authService.getCurrentUser(); if (!userData) throw new Error("Your session could not be restored."); dispatch(setSession({ userData })); navigate("/"); } catch (error) { setServerError(error.message); } };
+    return <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-xl shadow-slate-200/60 dark:shadow-slate-950/40 sm:p-9"><div className="mb-8"><Logo /><h1 className="mt-7 text-2xl font-bold tracking-tight text-foreground">Welcome back</h1><p className="mt-2 text-sm text-muted-foreground">Sign in to return to your writing workspace.</p></div>{serverError && <p role="alert" className="mb-5 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{serverError}</p>}<form onSubmit={handleSubmit(submit)} className="space-y-5"><Input label="Email address" type="email" autoComplete="email" placeholder="you@example.com" error={errors.email?.message} {...register("email", { required: "Enter your email address", pattern: { value: /^\S+@\S+\.\S+$/, message: "Enter a valid email address" } })} /><Input label="Password" type="password" autoComplete="current-password" placeholder="Your password" error={errors.password?.message} {...register("password", { required: "Enter your password" })} /><Button type="submit" disabled={isSubmitting} className="w-full bg-indigo-600 text-white hover:bg-indigo-700">{isSubmitting ? "Signing in…" : "Sign in"}</Button></form><p className="mt-7 text-center text-sm text-muted-foreground">New to Inkwell? <Link to="/signup" className="font-semibold text-indigo-600 hover:text-indigo-700">Create an account</Link></p></div>;
 }
-
-export default Login

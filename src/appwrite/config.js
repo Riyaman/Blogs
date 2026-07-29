@@ -1,138 +1,178 @@
-import conf from '../conf/conf.js';
-import { Client, ID, Databases, Storage, Query } from "appwrite";
+import { Client, Databases, ID, Query, Storage } from "appwrite";
+import config from "../conf/conf";
 
-export class Service{
+class PostService {
     client = new Client();
     databases;
     bucket;
-    
-    constructor(){
+
+    constructor() {
         this.client
-        .setEndpoint(conf.appwriteUrl)
-        .setProject(conf.appwriteProjectId);
+            .setEndpoint(config.appwriteUrl)
+            .setProject(config.appwriteProjectId);
+
         this.databases = new Databases(this.client);
         this.bucket = new Storage(this.client);
     }
 
-    async createPost({title, slug, content, featuredImage, status, userId}){
-        try {
-            await this.databases.createDocument(
-                conf.appwriteDataBaseId,
-                conf.appwriteCollectionId,
-                slug,
-                {
-                    title,
-                    content,
-                    featuredImage,
-                    status,
-                    userId,
-                }
-            )
-        } catch (error) {
-            console.log("Appwrite serive :: createPost :: error", error);
-        }
-    }
+    // ===========================
+    // POSTS
+    // ===========================
 
-    async updatePost(slug, {title, content, featuredImage, status}){
-        try {
-            return await this.databases.updateDocument(
-                conf.appwriteDataBaseId,
-                conf.appwriteCollectionId,
-                slug,
-                {
-                    title,
-                    content,
-                    featuredImage,
-                    status,
-
-                }
-            )
-        } catch (error) {
-            console.log("Appwrite serive :: updatePost :: error", error);
-        }
-    }
-
-    async deletePost(slug){
-        try {
-            await this.databases.deleteDocument(
-                conf.appwriteDataBaseId,
-                conf.appwriteCollectionId,
-                slug
-            
-            )
-            return true
-        } catch (error) {
-            console.log("Appwrite serive :: deletePost :: error", error);
-            return false
-        }
-    }
-
-    async getPost(slug){
-        try {
-            return await this.databases.getDocument(
-                conf.appwriteDataBaseId,
-                conf.appwriteCollectionId,
-                slug
-            
-            )
-        } catch (error) {
-            console.log("Appwrite serive :: getPost :: error", error);
-            return false
-        }
-    }
-
-    async getPosts(queries = [Query.equal("status", "active")]){
-        try {
-            return await this.databases.listDocuments(
-                conf.appwriteDataBaseId,
-                conf.appwriteCollectionId,
-                queries,
-            
-                
-
-            )
-        } catch (error) {
-            console.log("Appwrite serive :: getPosts :: error", error);
-            return false
-        }
-    }
-
-    // file upload service
-
-    async uploadFile(file){
-        try {
-            return await this.bucket.createFile(
-                conf.appwriteBucketId,
-                ID.unique(),
-                file
-            )
-        } catch (error) {
-            console.log("Appwrite serive :: uploadFile :: error", error);
-            return false
-        }
-    }
-
-    async deleteFile(fileId){
-        try {
-            await this.bucket.deleteFile(
-                conf.appwriteBucketId,
-                fileId
-            )
-            return true
-        } catch (error) {
-            console.log("Appwrite serive :: deleteFile :: error", error);
-            return false
-        }
-    }
-
-    getFilePreview(fileId){
-        return this.bucket.getFilePreview(
-            conf.appwriteBucketId,
-            fileId
-        )
+  async createPost({
+    title,
+    slug,
+    content,
+    featuredImage,
+    status,
+    userId,
+}) {
+    try {
+        return await this.databases.createDocument(
+            config.appwriteDataBaseId,
+            config.appwriteCollectionId,
+            slug || ID.unique(),
+            {
+                title,
+                content,
+                featuredImage,
+                status,
+                userId,
+            }
+        );
+    } catch (error) {
+        console.error("Create Post Error:", error);
+        throw error;
     }
 }
 
+    async updatePost(
+        documentId,
+        {
+            title,
+            slug,
+            content,
+            featuredImage,
+            status,
+        }
+    ) {
+        try {
+            return await this.databases.updateDocument(
+                config.appwriteDataBaseId,
+                config.appwriteCollectionId,
+                documentId,
+                {
+                    title,
+                    slug,
+                    content,
+                    featuredImage,
+                    status,
+                }
+            );
+        } catch (error) {
+            console.error("Update Post Error:", error);
+            throw error;
+        }
+    }
 
-const service = new Service()
-export default service
+    async deletePost(documentId) {
+        try {
+            return await this.databases.deleteDocument(
+                config.appwriteDataBaseId,
+                config.appwriteCollectionId,
+                documentId
+            );
+        } catch (error) {
+            console.error("Delete Post Error:", error);
+            throw error;
+        }
+    }
+
+    async getPost(documentId) {
+        try {
+            return await this.databases.getDocument(
+                config.appwriteDataBaseId,
+                config.appwriteCollectionId,
+                documentId
+            );
+        } catch (error) {
+            console.error("Get Post Error:", error);
+            return null;
+        }
+    }
+
+ async getPosts({ status = "active", authorId, limit = 100 } = {}) {
+    const queries = [
+        Query.orderDesc("$createdAt"),
+        Query.limit(limit),
+    ];
+
+    if (status) {
+        queries.push(Query.equal("status", status));
+    }
+
+    if (authorId) {
+        queries.push(Query.equal("userId", authorId));
+    }
+
+    try {
+        return await this.databases.listDocuments(
+            config.appwriteDataBaseId,
+            config.appwriteCollectionId,
+            queries
+        );
+    } catch (error) {
+        console.error("Get Posts Error:", error);
+        throw error;
+    }
+}
+
+    // ===========================
+    // STORAGE
+    // ===========================
+
+    async uploadFile(file) {
+        try {
+            return await this.bucket.createFile(
+                config.appwriteBucketId,
+                ID.unique(),
+                file
+            );
+        } catch (error) {
+            console.error("Upload File Error:", error);
+            return false;
+        }
+    }
+
+    async deleteFile(fileId) {
+        try {
+            return await this.bucket.deleteFile(
+                config.appwriteBucketId,
+                fileId
+            );
+        } catch (error) {
+            console.error("Delete File Error:", error);
+            return false;
+        }
+    }
+
+  getFilePreview(fileId) {
+    if (!fileId) return "";
+
+    return this.bucket
+        .getFileView(
+            config.appwriteBucketId,
+            fileId
+        )
+        .toString();
+                  console.log("Preview URL:", url);
+        } catch (error) {
+            console.error("Preview Error:", error);
+            return "";
+        }
+    }
+
+
+const appwriteService = new PostService();
+
+export default appwriteService;

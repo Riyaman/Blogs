@@ -1,81 +1,38 @@
-import React from 'react';
-import { Logo, LogoutBtn } from '../index'; 
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { BookOpen, LayoutDashboard, PenSquare } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Logo, LogoutBtn } from "../index";
+import { ModeToggle } from "../ui/mode-toggle";
 
-function Header() {
-  const authStatus = useSelector((state) => state.auth.status); // Get auth status from Redux store
-  const navigate = useNavigate();
-  
-  const navItems = [
-    {
-      name: "Home",
-      url: "/",
-      active: true
-    },
-    {
-      name: "Login",
-      url: "/login",
-      active: !authStatus
-    },
-    {
-      name: "Sign Up", 
-      url: "/signup",
-      active: !authStatus
-    },
-    {
-      name: "All Posts", 
-      url: "/all-posts",
-      active: authStatus
-    },
-    {
-      name: "Add Post",
-      url: "/add-post",
-      active: authStatus
-    }, {
-      name: "User Post",
-      url: "/userpost",
-      active: authStatus
-    }
-  ];
+const linkClass = ({ isActive }) =>
+    `inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+        isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+    }`;
 
-  return (
-    <header className="bg-indigo-600 text-white">
-      <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-        {/* Logo or Brand */}
-        <div className="text-2xl font-bold">
-          {/* <button onClick={() => navigate("/")} className="hover:text-gray-300">
-            My Blog
-          </button> */}
-          <Logo/>
-        </div>
+export default function Header() {
+    const isAuthenticated = useSelector((state) => state.auth.status);
 
-        {/* Navigation Links */}
-        <ul className="flex space-x-6 text-lg">
-          {navItems.map((item) =>
-            item.active ? (
-              <li key={item.name}>
-                <button 
-                  onClick={() => navigate(item.url)} 
-                  className="hover:text-gray-300 transition-colors duration-300"
-                >
-                  {item.name}
-                </button>
-              </li>
-            ) : null
-          )}
-        </ul>
-
-        {/* Logout Button */}
-        {authStatus && (
-          <div>
-            {/* <DeleteUser/> */}
-            <LogoutBtn />
-          </div>
-        )}
-      </nav>
-    </header>
-  );
+    return (
+        <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur">
+            <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10" aria-label="Main navigation">
+                <Logo />
+                <div className="flex items-center gap-1 sm:gap-2">
+                    <NavLink to="/" end className={linkClass}><BookOpen size={16} /> <span className="hidden sm:inline">Discover</span></NavLink>
+                    {isAuthenticated ? (
+                        <>
+                            <NavLink to="/all-posts" className={linkClass}><LayoutDashboard size={16} /> <span className="hidden sm:inline">Library</span></NavLink>
+                            <NavLink to="/add-post" className={linkClass}><PenSquare size={16} /> <span className="hidden sm:inline">Write</span></NavLink>
+                            <LogoutBtn />
+                        </>
+                    ) : (
+                        <>
+                            <NavLink to="/login" className={linkClass}>Sign in</NavLink>
+                            <NavLink to="/signup" className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">Get started</NavLink>
+                        </>
+                    )}
+                    <ModeToggle />
+                </div>
+            </nav>
+        </header>
+    );
 }
-
-export default Header;

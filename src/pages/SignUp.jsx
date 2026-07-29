@@ -1,9 +1,8 @@
-import React from 'react'
 import { SignUp as SignUpComponent } from '../components/index'
 
 function SignUp() {
   return (
-    <div className='py-8'>
+    <div className='px-5 py-12 sm:py-16'>
       <SignUpComponent/>
     </div>
   )

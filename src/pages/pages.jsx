@@ -5,8 +5,6 @@ import AddPost from "./AddPost";
 import AllPost from "./AllPost";
 import EditPost from "./EditPost";
 import Post from "./Post";
-import Loding from "./Loding";
-import UserPost from "./UserPost";
 export {
  Login,
  SignUp,
@@ -14,7 +12,5 @@ export {
  AddPost,
  AllPost,
  EditPost,
- Post,
- UserPost,
- Loding
+ Post
 }
